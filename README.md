@@ -45,4 +45,4 @@ A system that connects food donors with recipients to reduce food waste and figh
 - React for the frontend
 - Python for intelligent agents
 - SQLite for database
-- Socket.io for real-time communication 
+- Socket.io for real-time communication
