@@ -20,8 +20,8 @@ A web-based application for managing food donations and distribution using deliv
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/foodcycle-bot.git
-   cd foodcycle-bot
+   git clone https://github.com/UKR555/foodcycle-robot.git
+   cd foodcycle-robot
    ```
 
 2. Install dependencies:
