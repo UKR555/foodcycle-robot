@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodCycle Bot - Integrated System</title>
+    <!-- Leaflet.js (OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Add Poppins font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Main Styles */
+        :root {
+            --primary: #FF6B6B;
+            --primary-dark: #FA5252;
+            --primary-light: #FFE8E8;
+            --secondary: #4ECDC4;
+            --accent: #FFE66D;
+            --accent2: #6B5CA5;
+            --accent3: #F39237;
+            --text: #2F2E41;
+            --text-secondary: #6C6C6C;
+            --divider: #EEEEEE;
+            --background: #F9FAFB;
+            --card: #FFFFFF;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background);
+            color: var(--text);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .logo img {
+            margin-right: 10px;
+            height: 40px;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .nav-links li {
+            margin-left: 20px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background-color: var(--primary-dark);
+        }
+        
+        /* Dashboard Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: calc(100vh - 64px);
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background-color: var(--card);
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: var(--text);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 20px;
+            background-color: var(--background);
+        }
+        
+        .panel {
+            background-color: var(--card);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--divider);
+        }
+        
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        /* Dashboard Grids and Cards */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background-color: var(--card);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-card-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0 0 10px 0;
+        }
+        
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+        }
+        
+        .stat-card-subtext {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+        
+        .trend-up {
+            color: #4CAF50;
+        }
+        
+        .trend-down {
+            color: #F44336;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--divider);
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 5px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            background-color: var(--primary-light);
+            color: var(--text);
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--divider);
+        }
+        
+        tr:hover {
+            background-color: rgba(0,0,0,0.01);
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--divider);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background-color: var(--divider);
+            color: var(--text);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #A5A5A5;
+        }
+        
+        /* Chat Interface */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+        
+        .messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            max-width: 70%;
+        }
+        
+        .message.received {
+            background-color: white;
+            align-self: flex-start;
+        }
+        
+        .message.sent {
+            background-color: var(--primary-light);
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        
+        .message-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        
+        .chat-input {
+            display: flex;
+        }
+        
+        .chat-input input {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        
+        /* Map Styles */
+        .map-container {
+            height: 600px;
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .map-legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+        }
+        
+        .legend-item img {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+        
+        .legend-item span {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Robot Integration */
+        .robot-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-online {
+            background-color: #4CAF50;
+        }
+        
+        .status-offline {
+            background-color: #F44336;
+        }
+        
+        .status-idle {
+            background-color: #FFC107;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Food marker styling */
+        .food-marker-icon {
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
+        }
+        
+        .food-marker-icon:hover {
+            transform: scale(1.1);
+            cursor: pointer;
+        }
+        
+        /* Popup styling */
+        .donation-popup .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .donation-popup .leaflet-popup-content {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .donation-popup-content {
+            padding: 15px;
+        }
+        
+        .donation-popup-content h3 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: 1px solid var(--divider);
+            padding-bottom: 8px;
+        }
+        
+        .donation-popup-content p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .donation-popup-content .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .donation-popup-content .btn-primary,
+        .donation-popup-content .btn-secondary {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .donation-popup-content .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .donation-popup-content .btn-secondary {
+            background-color: var(--divider);
+            color: var(--text);
+        }
+        
+        .donation-popup-content .servings {
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+        
+        /* Add this CSS right before the end of the style tag */
+        .settings-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .settings-section {
+            margin-bottom: 30px;
+        }
+        
+        .settings-section h3 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--divider);
+            color: var(--primary);
+        }
+        
+        /* Add additional styling for the messages */
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .message-content {
+            padding: 12px 15px;
+            border-radius: 10px;
+            max-width: 75%;
+        }
+        
+        .received .message-content {
+            background-color: var(--background);
+            border-top-left-radius: 0;
+        }
+        
+        .sent .message-content {
+            background-color: var(--primary-light);
+            border-top-right-radius: 0;
+            margin-left: auto;
+        }
+        
+        .message strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .message p {
+            margin: 0;
+        }
+        
+        .message-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 5px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <span class="material-icons">eco</span>
+                    FoodCycle Bot
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#dashboard" class="active">Dashboard</a></li>
+                    <li><a href="#donations">Donations</a></li>
+                    <li><a href="#recipients">Recipients</a></li>
+                    <li><a href="#analytics">Analytics</a></li>
+                    <li><a href="#robots">Robot Fleet</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="dashboard">
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#dashboard" class="active"><span class="material-icons">dashboard</span> Dashboard</a></li>
+                <li><a href="#donations"><span class="material-icons">restaurant</span> Food Donations</a></li>
+                <li><a href="#recipients"><span class="material-icons">people</span> Recipients</a></li>
+                <li><a href="#messages"><span class="material-icons">message</span> Messages</a></li>
+                <li><a href="#robots"><span class="material-icons">precision_manufacturing</span> Robot Fleet</a></li>
+                <li><a href="#analytics"><span class="material-icons">insights</span> Analytics</a></li>
+                <li><a href="#map"><span class="material-icons">map</span> Delivery Map</a></li>
+                <li><a href="#settings"><span class="material-icons">settings</span> Settings</a></li>
+            </ul>
+        </aside>
+        
+        <main class="main-content">
+            <!-- Main Dashboard Content Here -->
+            <h1 id="dashboard">FoodCycle System Dashboard</h1>
+            
+            <!-- Stats Overview -->
+            <div class="grid-container">
+                <div class="stat-card">
+                    <p class="stat-card-title">TOTAL DONATIONS</p>
+                    <h2 class="stat-card-value">247</h2>
+                    <p class="stat-card-subtext"><span class="trend-up">↑ 12%</span> since last month</p>
+                </div>
+                
+                <div class="stat-card">
+                    <p class="stat-card-title">ACTIVE RECIPIENTS</p>
+                    <h2 class="stat-card-value">142</h2>
+                    <p class="stat-card-subtext"><span class="trend-up">↑ 5%</span> since last month</p>
+                </div>
+                
+                <div class="stat-card">
+                    <p class="stat-card-title">FOOD SAVED (KG)</p>
+                    <h2 class="stat-card-value">1,234</h2>
+                    <p class="stat-card-subtext"><span class="trend-up">↑ 15%</span> since last month</p>
+                </div>
+                
+                <div class="stat-card">
+                    <p class="stat-card-title">ACTIVE ROBOTS</p>
+                    <h2 class="stat-card-value">8</h2>
+                    <p class="stat-card-subtext"><span class="trend-up">↑ 2</span> more than last month</p>
+                </div>
+            </div>
+            
+            <!-- Recent Donations Panel -->
+            <div class="panel" id="donations">
+                <div class="panel-header">
+                    <h2 class="panel-title">Recent Donations</h2>
+                    <button class="btn btn-primary">Add New</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="recent-donations">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Food Item</th>
+                                <th>Quantity</th>
+                                <th>Donor</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic content will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Recipients Panel -->
+            <div class="panel" id="recipients">
+                <div class="panel-header">
+                    <h2 class="panel-title">Food Recipients</h2>
+                    <button class="btn btn-primary">Add Recipient</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="recipients-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>People Served</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>R001</td>
+                                <td>Community Center North</td>
+                                <td>Shelter</td>
+                                <td>Downtown</td>
+                                <td>120</td>
+                                <td><span class="status-available">Active</span></td>
+                                <td>
+                                    <button class="btn-action view">View</button>
+                                    <button class="btn-action assign">Assign</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>R002</td>
+                                <td>Hope Kitchen</td>
+                                <td>Soup Kitchen</td>
+                                <td>East Side</td>
+                                <td>85</td>
+                                <td><span class="status-available">Active</span></td>
+                                <td>
+                                    <button class="btn-action view">View</button>
+                                    <button class="btn-action assign">Assign</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>R003</td>
+                                <td>West Side Pantry</td>
+                                <td>Food Bank</td>
+                                <td>West End</td>
+                                <td>200</td>
+                                <td><span class="status-available">Active</span></td>
+                                <td>
+                                    <button class="btn-action view">View</button>
+                                    <button class="btn-action assign">Assign</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>R004</td>
+                                <td>South Community College</td>
+                                <td>School</td>
+                                <td>South Market</td>
+                                <td>150</td>
+                                <td><span class="status-pending">On Break</span></td>
+                                <td>
+                                    <button class="btn-action view">View</button>
+                                    <button class="btn-action assign">Assign</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Messages Panel -->
+            <div class="panel" id="messages">
+                <div class="panel-header">
+                    <h2 class="panel-title">Messages</h2>
+                    <button class="btn btn-primary">New Message</button>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="messages">
+                        <div class="message received">
+                            <div class="message-content">
+                                <strong>Green Farms</strong>
+                                <p>We have 10kg of fresh vegetables available for donation today. Can you arrange a pickup?</p>
+                                <span class="message-time">10:15 AM</span>
+                            </div>
+                        </div>
+                        
+                        <div class="message sent">
+                            <div class="message-content">
+                                <strong>FoodCycle Admin</strong>
+                                <p>Thank you! We'll send Robot #5 to your location within the next hour.</p>
+                                <span class="message-time">10:18 AM</span>
+                            </div>
+                        </div>
+                        
+                        <div class="message received">
+                            <div class="message-content">
+                                <strong>Community Center North</strong>
+                                <p>Do you have any bread donations coming in today? We're expecting extra people for dinner.</p>
+                                <span class="message-time">11:32 AM</span>
+                            </div>
+                        </div>
+                        
+                        <div class="message sent">
+                            <div class="message-content">
+                                <strong>FoodCycle Admin</strong>
+                                <p>Yes, West Side Bakery has 15 loaves available. We'll prioritize delivery to your location.</p>
+                                <span class="message-time">11:45 AM</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input">
+                        <input type="text" placeholder="Type your message...">
+                        <button class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Two Column Layout -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Database Monitoring -->
+                <div class="panel" id="analytics">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Database Status</h2>
+                        <span>Real-time Monitoring</span>
+                    </div>
+                    
+                    <div style="height: 250px;">
+                        <canvas id="database-chart"></canvas>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <h3>System Metrics</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <p><strong>Connections:</strong> <span id="db-connections">24</span></p>
+                                <p><strong>Queries/sec:</strong> <span id="db-queries">12.5</span></p>
+                            </div>
+                            <div>
+                                <p><strong>Disk Usage:</strong> <span id="db-disk">42%</span></p>
+                                <p><strong>Memory:</strong> <span id="db-memory">230MB</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Robot Fleet Status -->
+                <div class="panel" id="robots">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Robot Fleet Status</h2>
+                        <span id="robot-status-overall">6 Active</span>
+                    </div>
+                    
+                    <div id="robot-list">
+                        <!-- Robot list will be populated by JavaScript -->
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <button class="btn btn-primary" id="dispatch-robot">Dispatch Robot</button>
+                        <button class="btn btn-secondary" id="robot-maintenance">Schedule Maintenance</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery Map -->
+            <div class="panel" id="map">
+                <div class="panel-header">
+                    <h2 class="panel-title">Delivery Map</h2>
+                    <div>
+                        <button class="btn btn-secondary" id="filter-map">Filter</button>
+                        <button class="btn btn-primary" id="optimize-route">Route Optimization</button>
+                    </div>
+                </div>
+                
+                <div id="delivery-map" class="map-container">
+                    <!-- Map will be initialized here -->
+                </div>
+                
+                <div class="map-legend">
+                    <h4>Legend</h4>
+                    <div class="legend-item">
+                        <img src="/icons/donation-marker.png" alt="Donation" />
+                        <span>Available Donation</span>
+                    </div>
+                    <div class="legend-item">
+                        <img src="/icons/donation-marker-pending.png" alt="Pending" />
+                        <span>Pending Donation</span>
+                    </div>
+                    <div class="legend-item">
+                        <img src="/icons/donation-marker-completed.png" alt="Completed" />
+                        <span>Completed Donation</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add a Settings section at the end of the main content -->
+            <!-- Settings Panel -->
+            <div class="panel" id="settings">
+                <div class="panel-header">
+                    <h2 class="panel-title">Settings</h2>
+                    <button class="btn btn-primary">Save Changes</button>
+                </div>
+                
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h3>Account Settings</h3>
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" value="Admin" />
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" value="admin@foodcycle.org" />
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" value="************" />
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>Notification Settings</h3>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" checked /> Email notifications
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" checked /> SMS notifications
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" checked /> Push notifications
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>System Settings</h3>
+                        <div class="form-group">
+                            <label for="timezone">Timezone</label>
+                            <select id="timezone">
+                                <option>UTC</option>
+                                <option selected>Asia/Kolkata</option>
+                                <option>America/New_York</option>
+                                <option>Europe/London</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" checked /> Enable robot auto-dispatch
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="auto-refresh">Auto-refresh interval</label>
+                            <select id="auto-refresh">
+                                <option>10 seconds</option>
+                                <option selected>30 seconds</option>
+                                <option>1 minute</option>
+                                <option>5 minutes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+<script>
+    // Map Service functions integrated directly
+    let map = null;
+    let markers = [];
+    
+    // Initialize the map
+    function initializeMap(container, center, zoom = 12) {
+        try {
+            // Initialize the map
+            map = L.map(container).setView([center.lat, center.lng], zoom);
+            
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            return map;
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            throw error;
+        }
+    }
+    
+    // Add a marker to the map
+    function addMarker(position, title, iconUrl) {
+        if (!map) return null;
+        
+        // Create custom icon
+        const icon = L.icon({
+            iconUrl: iconUrl || '/icons/default-marker.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+        
+        // Create marker
+        const marker = L.marker([position.lat, position.lng], {
+            icon: icon,
+            title: title
+        }).addTo(map);
+        
+        markers.push(marker);
+        return marker;
+    }
+    
+    // Add a food donation marker to the map
+    function addFoodMarker(position, donation) {
+        if (!map) return null;
+        
+        // Get appropriate food icon based on food type
+        const iconUrl = getFoodIconUrl(donation.foodType || donation.item);
+        
+        // Create custom icon with round frame for food
+        const icon = L.icon({
+            iconUrl: iconUrl,
+            iconSize: [50, 50],
+            iconAnchor: [25, 50],
+            popupAnchor: [0, -45],
+            className: 'food-marker-icon' // This allows styling via CSS
+        });
+        
+        // Create marker
+        const marker = L.marker([position.lat, position.lng], {
+            icon: icon,
+            title: donation.item
+        }).addTo(map);
+        
+        // Create an enhanced popup with detailed donation information
+        const popupContent = createDonationPopupContent(donation, position);
+        marker.bindPopup(popupContent, {
+            maxWidth: 300,
+            className: 'donation-popup'
+        });
+        
+        markers.push(marker);
+        return marker;
+    }
+    
+    // Generate food icon URL based on food type
+    function getFoodIconUrl(foodType) {
+        // Try to find the icon in DOM first (fallback)
+        const iconElement = document.querySelector(`img[data-food-type="${foodType.toLowerCase()}"]`);
+        if (iconElement) {
+            return iconElement.src;
+        }
+        
+        // If element not found, try the file path
+        return `/icons/food/${foodType.toLowerCase()}.png`;
+    }
+    
+    // Create enhanced HTML content for donation popup
+    function createDonationPopupContent(donation, position) {
+        // Calculate how many people the donation can feed
+        const servingsEstimate = donation.servings || estimateServings(donation.quantity, donation.item);
+        
+        // Format expiration time
+        const expirationTime = donation.expirationTime ? 
+            new Date(donation.expirationTime).toLocaleString() : 
+            'Not specified';
+        
+        // Create the HTML content
+        return `
+            <div class="donation-popup-content">
+                <h3>${donation.item}</h3>
+                <p class="donor"><strong>Donor:</strong> ${donation.donor}</p>
+                <p class="quantity"><strong>Quantity:</strong> ${donation.quantity}</p>
+                <p class="servings"><strong>Serves:</strong> Approximately ${servingsEstimate} people</p>
+                <p class="freshness"><strong>Best before:</strong> ${expirationTime}</p>
+                <p class="location"><strong>Location:</strong> ${donation.location}</p>
+                ${donation.description ? `<p class="description">${donation.description}</p>` : ''}
+                <div class="actions">
+                    <button class="btn-primary" onclick="claimDonation('${donation.id}')">Claim</button>
+                    <button class="btn-secondary" onclick="getDirections(${position.lat}, ${position.lng})">Directions</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Estimate how many people a food donation can serve
+    function estimateServings(quantity, foodType) {
+        // Extract numeric value from quantity
+        const match = quantity.match(/(\d+(\.\d+)?)/);
+        if (!match) return 'unknown number of';
+        
+        const numericValue = parseFloat(match[1]);
+        
+        // Estimate servings based on food type
+        const servingsMap = {
+            'rice': 5, // people per kg
+            'pasta': 6, // people per kg
+            'bread': 2, // people per loaf
+            'vegetables': 3, // people per kg
+            'fruits': 4, // people per kg
+            'canned': 2, // people per can
+            'meat': 4, // people per kg
+            'meals': 1 // people per meal (direct)
+        };
+        
+        // Handle special cases in quantity units
+        if (quantity.toLowerCase().includes('meal') || quantity.toLowerCase().includes('portion')) {
+            return numericValue;
+        }
+        
+        if (quantity.toLowerCase().includes('kg') || quantity.toLowerCase().includes('kilo')) {
+            // Find best matching food type
+            for (const [key, servingsPerUnit] of Object.entries(servingsMap)) {
+                if (foodType.toLowerCase().includes(key)) {
+                    return Math.round(numericValue * servingsPerUnit);
+                }
+            }
+            // Default for kg if no specific match
+            return Math.round(numericValue * 4);
+        }
+        
+        if (quantity.toLowerCase().includes('loaves') || quantity.toLowerCase().includes('loaf')) {
+            return Math.round(numericValue * 2);
+        }
+        
+        if (quantity.toLowerCase().includes('cans') || quantity.toLowerCase().includes('can')) {
+            return Math.round(numericValue * 2);
+        }
+        
+        // Default estimate - rough approximation
+        return Math.round(numericValue * 3);
+    }
+    
+    // Add an info window to a marker
+    function addInfoWindow(marker, content) {
+        if (!marker) return null;
+        
+        marker.bindPopup(content);
+        return marker;
+    }
+    
+    // Remove a marker from the map
+    function removeMarker(marker) {
+        if (!map || !marker) return;
+        
+        map.removeLayer(marker);
+        markers = markers.filter(m => m !== marker);
+    }
+    
+    // Clear all markers from the map
+    function clearMarkers() {
+        if (!map) return;
+        
+        markers.forEach(marker => {
+            map.removeLayer(marker);
+        });
+        
+        markers = [];
+    }
+    
+    // Set the map center and zoom
+    function setCenterAndZoom(center, zoom) {
+        if (!map) return;
+        
+        map.setView([center.lat, center.lng], zoom);
+    }
+    
+    // Get the current map center
+    function getCenter() {
+        if (!map) return { lat: 0, lng: 0 };
+        
+        const center = map.getCenter();
+        return { lat: center.lat, lng: center.lng };
+    }
+    
+    // Get the current map zoom level
+    function getZoom() {
+        if (!map) return 12;
+        
+        return map.getZoom();
+    }
+    
+    // Draw a route between points
+    function drawRoute(points, options = {}) {
+        if (!map) return null;
+        
+        const routeCoordinates = points.map(point => [point.lat, point.lng]);
+        
+        const route = L.polyline(routeCoordinates, {
+            color: options.color || '#4CAF50',
+            weight: options.weight || 3,
+            opacity: options.opacity || 0.8
+        }).addTo(map);
+        
+        return route;
+    }
+    
+    // Geocode an address to coordinates
+    function geocodeAddress(address) {
+        return new Promise((resolve, reject) => {
+            // Use OpenStreetMap Nominatim API for geocoding
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        resolve({
+                            lat: parseFloat(data[0].lat),
+                            lng: parseFloat(data[0].lon)
+                        });
+                    } else {
+                        reject(new Error('Address not found'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Geocoding error:', error);
+                    reject(error);
+                });
+        });
+    }
+    
+    // Reverse geocode coordinates to an address
+    function reverseGeocode(position) {
+        return new Promise((resolve, reject) => {
+            // Use OpenStreetMap Nominatim API for reverse geocoding
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.lat}&lon=${position.lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        resolve(data.display_name);
+                    } else {
+                        reject(new Error('Location not found'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Reverse geocoding error:', error);
+                    reject(error);
+                });
+        });
+    }
+    
+    // Expose the map service functions
+    const mapService = {
+        initializeMap,
+        addMarker,
+        addFoodMarker,
+        addInfoWindow,
+        removeMarker,
+        clearMarkers,
+        setCenterAndZoom,
+        getCenter,
+        getZoom,
+        drawRoute,
+        geocodeAddress,
+        reverseGeocode,
+        getFoodIconUrl,
+        estimateServings
+    };
+    
+    // Simulated Data - enhanced with additional fields for better food markers
+    const donationsData = [
+        { 
+            id: 'D001', 
+            item: 'Fresh Vegetables', 
+            foodType: 'vegetables',
+            quantity: '5kg', 
+            donor: 'Green Farms', 
+            location: 'Downtown', 
+            status: 'Available', 
+            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+            expirationTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+            description: 'Assorted fresh vegetables including carrots, tomatoes, and leafy greens.',
+            servings: 15
+        },
+        { 
+            id: 'D002', 
+            item: 'Bread', 
+            foodType: 'bread',
+            quantity: '10 loaves', 
+            donor: 'West Side Bakery', 
+            location: 'West End', 
+            status: 'Assigned', 
+            timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+            expirationTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+        },
+        { 
+            id: 'D003', 
+            item: 'Canned Goods', 
+            foodType: 'canned',
+            quantity: '24 cans', 
+            donor: 'SuperMart', 
+            location: 'North District', 
+            status: 'Delivered', 
+            timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000)
+        },
+        { 
+            id: 'D004', 
+            item: 'Pasta', 
+            foodType: 'pasta',
+            quantity: '15 packs', 
+            donor: 'Italian Restaurant', 
+            location: 'East Side', 
+            status: 'In Transit', 
+            timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
+            expirationTime: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        },
+        { 
+            id: 'D005', 
+            item: 'Fresh Fruit', 
+            foodType: 'fruits',
+            quantity: '8kg', 
+            donor: 'Orchard Farms', 
+            location: 'South Market', 
+            status: 'Available', 
+            timestamp: new Date(Date.now() - 30 * 60 * 1000),
+            expirationTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+            description: 'Fresh seasonal fruits including apples, oranges, and bananas.',
+            servings: 32
+        },
+        { 
+            id: 'D006', 
+            item: 'Cooked Rice', 
+            foodType: 'rice',
+            quantity: '10kg', 
+            donor: 'Asian Kitchen', 
+            location: 'Central District', 
+            status: 'Available', 
+            timestamp: new Date(Date.now() - 45 * 60 * 1000),
+            expirationTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            description: 'Freshly cooked white rice, ready to serve.',
+            servings: 50
+        },
+        { 
+            id: 'D007', 
+            item: 'Dairy Products', 
+            foodType: 'dairy',
+            quantity: '25 units', 
+            donor: 'Fresh Dairy Co', 
+            location: 'North End', 
+            status: 'Available', 
+            timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
+            expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            description: 'Assorted dairy products including milk, yogurt, and cheese.',
+            servings: 25
+        }
+    ];
+    
+    const robotsData = [
+        { id: 'R001', name: 'FoodBot 1', status: 'Active', battery: 85, location: 'Downtown', lastMaintenance: '2023-03-15', currentTask: 'Delivering to Community Center' },
+        { id: 'R002', name: 'FoodBot 2', status: 'Idle', battery: 100, location: 'Warehouse', lastMaintenance: '2023-03-20', currentTask: 'None' },
+        { id: 'R003', name: 'FoodBot 3', status: 'Active', battery: 62, location: 'West End', lastMaintenance: '2023-03-10', currentTask: 'Pickup from Bakery' },
+        { id: 'R004', name: 'FoodBot 4', status: 'Maintenance', battery: 30, location: 'Service Center', lastMaintenance: '2023-03-22', currentTask: 'Under Repair' },
+        { id: 'R005', name: 'FoodBot 5', status: 'Active', battery: 90, location: 'South Market', lastMaintenance: '2023-03-18', currentTask: 'Returning to Warehouse' },
+        { id: 'R006', name: 'FoodBot 6', status: 'Active', battery: 75, location: 'North District', lastMaintenance: '2023-03-12', currentTask: 'Pickup from SuperMart' }
+    ];
+    
+    // Database monitoring simulated data
+    let dbMetrics = {
+        connections: 24,
+        queries: 12.5,
+        disk: 42,
+        memory: 230,
+        responseTime: [45, 42, 48, 46, 43, 44, 47, 45, 43, 46, 48, 50]
+    };
+    
+    // Populate Recent Donations Table
+    function populateDonationsTable() {
+        const tableBody = document.querySelector('#recent-donations tbody');
+        tableBody.innerHTML = '';
+        
+        donationsData.forEach(donation => {
+            const row = document.createElement('tr');
+            
+            const formattedTime = donation.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            row.innerHTML = `
+                <td>${donation.id}</td>
+                <td>${donation.item}</td>
+                <td>${donation.quantity}</td>
+                <td>${donation.donor}</td>
+                <td>${donation.location}</td>
+                <td><span class="status-${donation.status.toLowerCase()}">${donation.status}</span></td>
+                <td>
+                    <button class="btn-action view" data-id="${donation.id}">View</button>
+                    <button class="btn-action assign" data-id="${donation.id}">Assign</button>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        // Add event listeners for action buttons
+        document.querySelectorAll('.btn-action').forEach(button => {
+            button.addEventListener('click', function() {
+                const donationId = this.getAttribute('data-id');
+                const action = this.classList.contains('view') ? 'view' : 'assign';
+                
+                if (action === 'view') {
+                    alert(`Viewing details for donation ${donationId}`);
+                } else {
+                    showRobotAssignmentModal(donationId);
+                }
+            });
+        });
+    }
+    
+    // Populate Robot Fleet Status
+    function populateRobotList() {
+        const robotList = document.getElementById('robot-list');
+        robotList.innerHTML = '';
+        
+        robotsData.forEach(robot => {
+            const robotElement = document.createElement('div');
+            robotElement.className = 'robot-status';
+            
+            let statusClass = 'status-idle';
+            if (robot.status === 'Active') statusClass = 'status-online';
+            if (robot.status === 'Maintenance') statusClass = 'status-offline';
+            
+            robotElement.innerHTML = `
+                <span class="status-indicator ${statusClass}"></span>
+                <div style="flex-grow: 1">
+                    <div style="display: flex; justify-content: space-between;">
+                        <strong>${robot.name}</strong>
+                        <span>${robot.status}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-secondary);">
+                        <span>Battery: ${robot.battery}%</span>
+                        <span>${robot.location}</span>
+                    </div>
+                    <div style="font-size: 0.85rem; margin-top: 3px;">
+                        <span>${robot.currentTask}</span>
+                    </div>
+                </div>
+            `;
+            
+            robotList.appendChild(robotElement);
+        });
+    }
+    
+    // Initialize Database Chart
+    function initDatabaseChart() {
+        const ctx = document.getElementById('database-chart').getContext('2d');
+        const dbChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['5m ago', '4m ago', '3m ago', '2m ago', '1m ago', 'Now'],
+                datasets: [{
+                    label: 'Response Time (ms)',
+                    data: dbMetrics.responseTime.slice(-6),
+                    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 30,
+                        max: 60
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Update chart with new data periodically
+        setInterval(() => {
+            // Simulate fluctuations in response time
+            const newValue = 45 + Math.floor(Math.random() * 10);
+            dbMetrics.responseTime.push(newValue);
+            dbMetrics.responseTime = dbMetrics.responseTime.slice(-12);
+            
+            // Update chart data
+            dbChart.data.datasets[0].data = dbMetrics.responseTime.slice(-6);
+            dbChart.update();
+            
+            // Update other metrics
+            updateDatabaseMetrics();
+        }, 5000);
+    }
+    
+    // Update Database Metrics Display
+    function updateDatabaseMetrics() {
+        // Simulate small changes to metrics
+        dbMetrics.connections = Math.max(1, Math.min(50, dbMetrics.connections + Math.floor(Math.random() * 5) - 2));
+        dbMetrics.queries = Math.max(1, Math.min(30, dbMetrics.queries + (Math.random() * 2 - 1).toFixed(1)));
+        dbMetrics.disk = Math.max(10, Math.min(90, dbMetrics.disk + Math.floor(Math.random() * 3) - 1));
+        dbMetrics.memory = Math.max(100, Math.min(500, dbMetrics.memory + Math.floor(Math.random() * 10) - 5));
+        
+        // Update display
+        document.getElementById('db-connections').textContent = dbMetrics.connections;
+        document.getElementById('db-queries').textContent = parseFloat(dbMetrics.queries).toFixed(1);
+        document.getElementById('db-disk').textContent = `${dbMetrics.disk}%`;
+        document.getElementById('db-memory').textContent = `${dbMetrics.memory}MB`;
+    }
+    
+    // Function to simulate new donation with enhanced details
+    function simulateNewDonation() {
+        const items = [
+            {item: 'Rice', type: 'rice'},
+            {item: 'Vegetables', type: 'vegetables'},
+            {item: 'Fruit', type: 'fruits'},
+            {item: 'Canned Food', type: 'canned'},
+            {item: 'Bread', type: 'bread'},
+            {item: 'Milk', type: 'dairy'},
+            {item: 'Cereal', type: 'mixed'},
+            {item: 'Pasta', type: 'pasta'}
+        ];
+        const locations = ['Downtown', 'West End', 'East Side', 'North District', 'South Market'];
+        const donors = ['Community Kitchen', 'Local Farm', 'Grocery Store', 'Restaurant', 'Bakery', 'School Cafeteria'];
+        const quantities = ['5kg', '10 packs', '3 boxes', '20 cans', '15 units', '8 cartons'];
+        
+        const selectedItemIndex = Math.floor(Math.random() * items.length);
+        const selectedItem = items[selectedItemIndex];
+        
+        const newDonation = {
+            id: `D${100 + donationsData.length}`,
+            item: selectedItem.item,
+            foodType: selectedItem.type,
+            quantity: quantities[Math.floor(Math.random() * quantities.length)],
+            donor: donors[Math.floor(Math.random() * donors.length)],
+            location: locations[Math.floor(Math.random() * locations.length)],
+            status: 'Available',
+            timestamp: new Date(),
+            expirationTime: new Date(Date.now() + (Math.floor(Math.random() * 10) + 1) * 24 * 60 * 60 * 1000),
+            description: `Fresh ${selectedItem.item.toLowerCase()} available for pickup.`
+        };
+        
+        // Estimate servings
+        newDonation.servings = estimateServings(newDonation.quantity, newDonation.item);
+        
+        donationsData.unshift(newDonation);
+        
+        // Keep only recent donations in the list
+        if (donationsData.length > 20) {
+            donationsData.pop();
+        }
+        
+        populateDonationsTable();
+        updateDonationMarkers(); // Update the map markers
+        showNotification(`New donation received: ${newDonation.quantity} of ${newDonation.item} from ${newDonation.donor}`);
+    }
+    
+    // Simulate robot status changes
+    function simulateRobotStatusChanges() {
+        const robotIndex = Math.floor(Math.random() * robotsData.length);
+        const robot = robotsData[robotIndex];
+        
+        // Simulate battery drain for active robots
+        if (robot.status === 'Active') {
+            robot.battery = Math.max(0, robot.battery - Math.floor(Math.random() * 5));
+            
+            // If battery is low, send for charging
+            if (robot.battery < 20) {
+                robot.status = 'Idle';
+                robot.currentTask = 'Returning for charging';
+                showNotification(`${robot.name} is low on battery and returning to base for charging.`);
+            }
+        } 
+        // Simulate battery charging for idle robots
+        else if (robot.status === 'Idle') {
+            robot.battery = Math.min(100, robot.battery + Math.floor(Math.random() * 10));
+            
+            // If fully charged, make available for tasks
+            if (robot.battery > 95) {
+                robot.currentTask = 'Ready for assignment';
+            }
+        }
+        // Simulate repair completion
+        else if (robot.status === 'Maintenance' && Math.random() > 0.7) {
+            robot.status = 'Idle';
+            robot.battery = 100;
+            robot.currentTask = 'Maintenance complete';
+            robot.lastMaintenance = new Date().toISOString().split('T')[0];
+            showNotification(`${robot.name} has completed maintenance and is ready for assignment.`);
+        }
+        
+        populateRobotList();
+        updateRobotStatusCount();
+    }
+    
+    // Update the count of active robots on the dashboard
+    function updateRobotStatusCount() {
+        const activeCount = robotsData.filter(robot => robot.status === 'Active').length;
+        document.getElementById('robot-status-overall').textContent = `${activeCount} Active`;
+    }
+    
+    // Function to show in-app notification
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+        
+        // Apply styles
+        Object.assign(notification.style, {
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            backgroundColor: 'var(--primary)',
+            color: 'white',
+            padding: '10px 20px',
+            borderRadius: '4px',
+            boxShadow: '0 3px 6px rgba(0,0,0,0.16)',
+            zIndex: 1000,
+            transition: 'transform 0.3s, opacity 0.3s',
+            transform: 'translateY(20px)',
+            opacity: 0
+        });
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.transform = 'translateY(0)';
+            notification.style.opacity = 1;
+        }, 10);
+        
+        // Remove after delay
+        setTimeout(() => {
+            notification.style.transform = 'translateY(20px)';
+            notification.style.opacity = 0;
+            
+            // Remove from DOM after animation
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 5000);
+    }
+    
+    // Function to show robot assignment modal
+    function showRobotAssignmentModal(donationId) {
+        const donation = donationsData.find(d => d.id === donationId);
+        if (!donation) return;
+        
+        // Create modal element
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        
+        // Available robots for assignment
+        const availableRobots = robotsData.filter(r => r.status !== 'Maintenance' && r.battery > 30);
+        
+        // Create modal content
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Assign Robot for Delivery</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Donation:</strong> ${donation.item} (${donation.quantity})</p>
+                    <p><strong>Pickup Location:</strong> ${donation.location}</p>
+                    <p><strong>Donor:</strong> ${donation.donor}</p>
+                    
+                    <h4>Select Robot</h4>
+                    <div class="robot-selection">
+                        ${availableRobots.map(robot => `
+                            <div class="robot-option" data-id="${robot.id}">
+                                <input type="radio" name="robot" id="robot-${robot.id}" value="${robot.id}">
+                                <label for="robot-${robot.id}">
+                                    <strong>${robot.name}</strong> - Battery: ${robot.battery}%
+                                    <div>${robot.location}</div>
+                                </label>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <h4>Delivery Information</h4>
+                    <div class="form-group">
+                        <label for="recipient">Recipient:</label>
+                        <select id="recipient">
+                            <option value="cc1">Community Center North</option>
+                            <option value="cc2">Downtown Shelter</option>
+                            <option value="cc3">East Side Kitchen</option>
+                            <option value="cc4">Hope Center</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="delivery-time">Estimated Delivery Time:</label>
+                        <input type="time" id="delivery-time" value="14:30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="delivery-notes">Notes:</label>
+                        <textarea id="delivery-notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-assignment">Cancel</button>
+                    <button class="btn btn-primary" id="confirm-assignment">Confirm Assignment</button>
+                </div>
+            </div>
+        `;
+        
+        // Apply modal styles
+        Object.assign(modal.style, {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+        });
+        
+        // Apply modal content styles
+        const modalContent = modal.querySelector('.modal-content');
+        Object.assign(modalContent.style, {
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            width: '500px',
+            maxWidth: '90%',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+        });
+        
+        // Apply other styles
+        const modalHeader = modal.querySelector('.modal-header');
+        Object.assign(modalHeader.style, {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: '1px solid var(--divider)',
+            paddingBottom: '10px',
+            marginBottom: '15px'
+        });
+        
+        const closeBtn = modal.querySelector('.close');
+        Object.assign(closeBtn.style, {
+            fontSize: '24px',
+            cursor: 'pointer'
+        });
+        
+        const robotSelection = modal.querySelector('.robot-selection');
+        Object.assign(robotSelection.style, {
+            margin: '15px 0',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '10px'
+        });
+        
+        const robotOptions = modal.querySelectorAll('.robot-option');
+        robotOptions.forEach(option => {
+            Object.assign(option.style, {
+                padding: '10px',
+                border: '1px solid var(--divider)',
+                borderRadius: '4px',
+                cursor: 'pointer'
+            });
+            
+            option.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // Remove selected class from all options
+                robotOptions.forEach(o => o.classList.remove('selected'));
+                
+                // Add selected class to this option
+                this.classList.add('selected');
+            });
+        });
+        
+        const modalFooter = modal.querySelector('.modal-footer');
+        Object.assign(modalFooter.style, {
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '10px',
+            marginTop: '20px',
+            paddingTop: '15px',
+            borderTop: '1px solid var(--divider)'
+        });
+        
+        // Add to document
+        document.body.appendChild(modal);
+        
+        // Close modal function
+        function closeModal() {
+            modal.style.opacity = 0;
+            setTimeout(() => {
+                document.body.removeChild(modal);
+            }, 300);
+        }
+        
+        // Event listeners
+        closeBtn.addEventListener('click', closeModal);
+        
+        modal.querySelector('#cancel-assignment').addEventListener('click', closeModal);
+        
+        modal.querySelector('#confirm-assignment').addEventListener('click', function() {
+            const selectedRobotId = modal.querySelector('input[name="robot"]:checked')?.value;
+            if (!selectedRobotId) {
+                alert('Please select a robot for assignment');
+                return;
+            }
+            
+            const recipient = modal.querySelector('#recipient').value;
+            const estimatedTime = modal.querySelector('#delivery-time').value;
+            
+            // Update donation status
+            donation.status = 'Assigned';
+            
+            // Update robot status
+            const robot = robotsData.find(r => r.id === selectedRobotId);
+            if (robot) {
+                robot.status = 'Active';
+                robot.currentTask = `Delivering ${donation.item} to ${recipient}`;
+            }
+            
+            // Refresh displays
+            populateDonationsTable();
+            populateRobotList();
+            
+            showNotification(`Assigned ${robot?.name} to deliver ${donation.item} to ${recipient} at ${estimatedTime}`);
+            
+            closeModal();
+        });
+    }
+    
+    // Robot dispatch button event listener
+    document.getElementById('dispatch-robot').addEventListener('click', function() {
+        const availableRobots = robotsData.filter(r => r.status === 'Idle' && r.battery > 50);
+        
+        if (availableRobots.length === 0) {
+            showNotification('No robots available for dispatch. Please wait for a robot to become available.');
+            return;
+        }
+        
+        const robot = availableRobots[0];
+        robot.status = 'Active';
+        robot.currentTask = 'Manual dispatch - awaiting instructions';
+        
+        populateRobotList();
+        updateRobotStatusCount();
+        
+        showNotification(`${robot.name} has been dispatched and is awaiting instructions.`);
+    });
+    
+    // Maintenance button event listener
+    document.getElementById('robot-maintenance').addEventListener('click', function() {
+        const robots = robotsData.filter(r => r.status !== 'Maintenance');
+        
+        if (robots.length === 0) {
+            showNotification('No robots available for maintenance scheduling.');
+            return;
+        }
+        
+        // Find robot with lowest battery or oldest maintenance date
+        let robotForMaintenance = robots[0];
+        
+        robots.forEach(robot => {
+            const lastMaintDate = new Date(robot.lastMaintenance);
+            const currentRobotLastMaintDate = new Date(robotForMaintenance.lastMaintenance);
+            
+            if (robot.battery < 30 || lastMaintDate < currentRobotLastMaintDate) {
+                robotForMaintenance = robot;
+            }
+        });
+        
+        robotForMaintenance.status = 'Maintenance';
+        robotForMaintenance.currentTask = 'Scheduled maintenance';
+        
+        populateRobotList();
+        updateRobotStatusCount();
+        
+        showNotification(`${robotForMaintenance.name} has been scheduled for maintenance.`);
+    });
+    
+    // Initialize map
+    let donationMarkers = [];
+    
+    async function setupMap() {
+        try {
+            // Initialize the map with Leaflet.js using our map service function
+            map = L.map('delivery-map').setView([20.5937, 78.9629], 5);
+            
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Add markers for donations
+            updateDonationMarkers();
+            
+            // Add event listeners for map controls
+            document.getElementById('filter-map').addEventListener('click', showFilterModal);
+            document.getElementById('optimize-route').addEventListener('click', optimizeRoute);
+            
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            showNotification('Error loading map. Please try again later.');
+        }
+    }
+    
+    function updateDonationMarkers() {
+        // Clear existing markers
+        clearMarkers();
+        donationMarkers = [];
+        
+        // Add markers for each donation
+        donationsData.forEach(donation => {
+            // Simulate location data (in a real app, this would come from the backend)
+            const location = getRandomLocation();
+            
+            // Only show available donations with food markers
+            if (donation.status === 'Available') {
+                // Add food-specific marker with enhanced popup
+                const foodMarker = addFoodMarker(location, donation);
+                donationMarkers.push(foodMarker);
+            } else {
+                // Create custom icon for non-available donations
+                const iconUrl = document.querySelector(`img[data-marker-id="${donation.status === 'Pending' ? 'donation-marker-pending' : 'donation-marker-completed'}"]`)?.src || 
+                               `/icons/${donation.status === 'Pending' ? 'donation-marker-pending' : 'donation-marker-completed'}.png`;
+                
+                const icon = L.icon({
+                    iconUrl: iconUrl,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
+                });
+                
+                // Create marker
+                const marker = L.marker([location.lat, location.lng], {icon: icon}).addTo(map);
+                
+                // Add popup
+                marker.bindPopup(`
+                    <div class="donation-info">
+                        <h3>${donation.item}</h3>
+                        <p>Quantity: ${donation.quantity}</p>
+                        <p>Donor: ${donation.donor}</p>
+                        <p>Status: ${donation.status}</p>
+                    </div>
+                `);
+                
+                donationMarkers.push(marker);
+            }
+        });
+    }
+    
+    function getRandomLocation() {
+        // Generate random coordinates around India
+        const lat = 20.5937 + (Math.random() - 0.5) * 10;
+        const lng = 78.9629 + (Math.random() - 0.5) * 10;
+        return { lat, lng };
+    }
+    
+    function showDonationDetails(donation) {
+        // Show donation details in a modal
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Donation Details</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Item:</strong> ${donation.item}</p>
+                    <p><strong>Quantity:</strong> ${donation.quantity}</p>
+                    <p><strong>Donor:</strong> ${donation.donor}</p>
+                    <p><strong>Location:</strong> ${donation.location}</p>
+                    <p><strong>Status:</strong> ${donation.status}</p>
+                    <p><strong>Time:</strong> ${donation.timestamp.toLocaleString()}</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="close-details">Close</button>
+                    <button class="btn btn-primary" id="assign-robot">Assign Robot</button>
+                </div>
+            </div>
+        `;
+        
+        // Apply modal styles
+        Object.assign(modal.style, {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+        });
+        
+        // Apply modal content styles
+        const modalContent = modal.querySelector('.modal-content');
+        Object.assign(modalContent.style, {
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            width: '500px',
+            maxWidth: '90%',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+        });
+        
+        // Add to document
+        document.body.appendChild(modal);
+        
+        // Event listeners
+        modal.querySelector('.close').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        modal.querySelector('#close-details').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        modal.querySelector('#assign-robot').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            showRobotAssignmentModal(donation.id);
+        });
+    }
+    
+    function showFilterModal() {
+        // Create and show filter modal
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Filter Donations</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="status-filter">Status:</label>
+                        <select id="status-filter">
+                            <option value="all">All</option>
+                            <option value="Available">Available</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="category-filter">Category:</label>
+                        <select id="category-filter">
+                            <option value="all">All</option>
+                            <option value="food">Food</option>
+                            <option value="drinks">Drinks</option>
+                            <option value="snacks">Snacks</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="distance-filter">Distance (km):</label>
+                        <input type="number" id="distance-filter" min="1" max="100" value="10">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-filter">Cancel</button>
+                    <button class="btn btn-primary" id="apply-filter">Apply Filter</button>
+                </div>
+            </div>
+        `;
+        
+        // Apply modal styles (same as before)
+        // ...
+        
+        // Add to document
+        document.body.appendChild(modal);
+        
+        // Event listeners
+        modal.querySelector('.close').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        modal.querySelector('#cancel-filter').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        modal.querySelector('#apply-filter').addEventListener('click', () => {
+            const status = document.getElementById('status-filter').value;
+            const category = document.getElementById('category-filter').value;
+            const distance = document.getElementById('distance-filter').value;
+            
+            // Apply filters to the map
+            applyMapFilters(status, category, distance);
+            
+            document.body.removeChild(modal);
+        });
+    }
+    
+    function applyMapFilters(status, category, distance) {
+        // Filter markers based on criteria
+        donationMarkers.forEach(marker => {
+            const donation = donationsData.find(d => 
+                d.item === marker.options.title
+            );
+            
+            if (donation) {
+                const statusMatch = status === 'all' || donation.status === status;
+                const categoryMatch = category === 'all' || donation.foodType === category;
+                
+                // Show/hide marker based on filters
+                if (statusMatch && categoryMatch) {
+                    marker.addTo(map);
+                } else {
+                    map.removeLayer(marker);
+                }
+            }
+        });
+        
+        showNotification('Filters applied successfully');
+    }
+    
+    function optimizeRoute() {
+        // Get visible markers
+        const visibleMarkers = donationMarkers.filter(marker => map.hasLayer(marker));
+        
+        if (visibleMarkers.length < 2) {
+            showNotification('Need at least 2 locations to optimize route');
+            return;
+        }
+        
+        // In a real app, this would call a route optimization API
+        showNotification('Route optimization in progress...');
+        
+        // Simulate route optimization
+        setTimeout(() => {
+            // Draw route lines between markers
+            const routeCoordinates = visibleMarkers.map(marker => marker.getLatLng());
+            
+            const route = L.polyline(routeCoordinates, {
+                color: '#4CAF50',
+                weight: 3,
+                opacity: 0.8
+            }).addTo(map);
+            
+            showNotification('Route optimized successfully');
+        }, 1500);
+    }
+    
+    // Navigation handling
+    function handleNavigation() {
+        // Get all navigation links
+        const navLinks = document.querySelectorAll('.nav-links a, .sidebar-menu a');
+        
+        // Function to set active link based on current hash
+        function setActiveLink() {
+            const hash = window.location.hash || '#dashboard';
+            
+            // Remove active class from all links
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Add active class to matching links
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === hash) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        // Set active link on page load and hash change
+        setActiveLink();
+        window.addEventListener('hashchange', setActiveLink);
+        
+        // Add click event listener to each link
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                // Remove active class from all links
+                navLinks.forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+            });
+        });
+    }
+    
+    // Initialize navigation when DOM is loaded
+    window.addEventListener('DOMContentLoaded', function() {
+        // Initialize all components
+        populateDonationsTable();
+        populateRobotList();
+        initDatabaseChart();
+        updateRobotStatusCount();
+        setupMap(); // Initialize the map
+        
+        // Set up periodic simulations for dynamic data
+        setInterval(simulateNewDonation, 30000); // New donation every 30 seconds
+        setInterval(simulateRobotStatusChanges, 15000); // Robot status changes every 15 seconds
+        
+        // Initialize navigation
+        handleNavigation();
+        
+        showNotification('Welcome to the FoodCycle Bot Integrated System Dashboard!');
+    });
+    
+    // Add these global functions to handle marker button clicks
+    window.claimDonation = function(donationId) {
+        const donation = donationsData.find(d => d.id === donationId);
+        if (!donation) return;
+        
+        // Simulate claiming the donation
+        donation.status = 'Pending';
+        
+        showNotification(`You have claimed the donation: ${donation.item} from ${donation.donor}. Please pick it up within 24 hours.`);
+        
+        // Update the map and tables
+        updateDonationMarkers();
+        populateDonationsTable();
+    };
+    
+    window.getDirections = function(lat, lng) {
+        // Open directions in a new tab using OpenStreetMap
+        const userLat = map.getCenter().lat;
+        const userLng = map.getCenter().lng;
+        window.open(`https://www.openstreetmap.org/directions?from=${userLat},${userLng}&to=${lat},${lng}`, '_blank');
+    };
+    
+    // Create fallback food icons on page load
+    function generateFoodIcons() {
+        // Food types and their colors
+        const foodIcons = {
+            'vegetables': '#4CAF50', // Green
+            'fruits': '#FF9800',     // Orange
+            'bread': '#FFC107',      // Amber
+            'rice': '#FFEB3B',       // Yellow
+            'pasta': '#FFF59D',      // Light yellow
+            'meat': '#F44336',       // Red
+            'dairy': '#42A5F5',      // Blue
+            'canned': '#78909C',     // Blue grey
+            'dessert': '#EC407A',    // Pink
+            'beverage': '#29B6F6',   // Light blue
+            'mixed': '#9C27B0'       // Purple
+        };
+        
+        // Create canvas for generating icons
+        const canvas = document.createElement('canvas');
+        canvas.width = 50;
+        canvas.height = 50;
+        const ctx = canvas.getContext('2d');
+        
+        // Generate each food icon
+        for (const [foodType, color] of Object.entries(foodIcons)) {
+            // Draw a circular icon
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(25, 25, 23, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Add text
+            ctx.font = 'bold 10px Arial';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(foodType.toUpperCase(), 25, 25);
+            
+            // Create an image element to hold the icon
+            const img = new Image();
+            img.src = canvas.toDataURL('image/png');
+            img.className = 'food-icon-test';
+            img.style.display = 'none';
+            img.setAttribute('data-food-type', foodType);
+            document.body.appendChild(img);
+        }
+        
+        // Create default marker icon
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.arc(25, 25, 12, 0, Math.PI * 2);
+        ctx.fillStyle = '#4CAF50';
+        ctx.fill();
+        
+        const defaultImg = new Image();
+        defaultImg.src = canvas.toDataURL('image/png');
+        defaultImg.className = 'food-icon-test';
+        defaultImg.style.display = 'none';
+        defaultImg.setAttribute('data-food-type', 'default-marker');
+        document.body.appendChild(defaultImg);
+    }
+    
+    // Generate donation marker PNGs on page load
+    function generateMarkerImages() {
+        // Donation marker data
+        const markerData = [
+            { id: 'donation-marker', color: '#4CAF50' },
+            { id: 'donation-marker-pending', color: '#FFC107' },
+            { id: 'donation-marker-completed', color: '#2196F3' }
+        ];
+        
+        // Create a canvas to generate the images
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        
+        // Generate each marker image
+        markerData.forEach(marker => {
+            // Draw marker shape (simplified for canvas)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw pin circle
+            ctx.beginPath();
+            ctx.arc(16, 10, 7, 0, Math.PI * 2);
+            ctx.fillStyle = marker.color;
+            ctx.fill();
+            
+            // Draw pin pointer
+            ctx.beginPath();
+            ctx.moveTo(10, 10);
+            ctx.lineTo(16, 25);
+            ctx.lineTo(22, 10);
+            ctx.closePath();
+            ctx.fillStyle = marker.color;
+            ctx.fill();
+            
+            // Create an image and try to use it
+            const img = new Image();
+            img.src = canvas.toDataURL('image/png');
+            img.className = 'icon-test';
+            img.style.display = 'none';
+            img.setAttribute('data-marker-id', marker.id);
+            document.body.appendChild(img);
+        });
+    }
+    
+    // Call both icon generation functions
+    generateFoodIcons();
+    generateMarkerImages();
+</script>
+</html> 

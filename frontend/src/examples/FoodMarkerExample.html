@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Donation Markers Example</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+        }
+        
+        .description {
+            background-color: #f5f5f5;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        #map {
+            height: 500px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .map-controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin-right: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background-color: #388E3C;
+        }
+        
+        .food-marker-icon {
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
+        }
+        
+        .food-marker-icon:hover {
+            transform: scale(1.1);
+            cursor: pointer;
+        }
+        
+        .donation-popup .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .donation-popup .leaflet-popup-content {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .donation-popup-content {
+            padding: 15px;
+        }
+        
+        .donation-popup-content h3 {
+            margin-top: 0;
+            color: #388E3C;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+        
+        .donation-popup-content p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .donation-popup-content .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .btn-primary, .btn-secondary {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #ddd;
+            color: #333;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            color: #388E3C;
+            margin-top: 0;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Food Donation Markers Example</h1>
+        
+        <div class="description">
+            <p>This example shows how food donation markers would appear on the map. Each marker displays a specific food image, and when clicked, it shows detailed information about the donation.</p>
+            <p>The colors and styles match the FoodCycle Bot system design.</p>
+        </div>
+        
+        <div class="map-controls">
+            <button id="reset-view">Reset View</button>
+            <button id="add-sample">Add Sample Donation</button>
+            <button id="clear-all">Clear All</button>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div class="card">
+            <h2>How It Works</h2>
+            <p>This example demonstrates how the mapService's <code>addFoodMarker()</code> function creates food-specific markers on the map:</p>
+            <ol>
+                <li>Each marker shows an actual image of the food type being donated</li>
+                <li>Clicking a marker opens a detailed popup with donation information</li>
+                <li>The popup shows the donor, quantity, servings estimate, and expiration time</li>
+                <li>Users can claim the donation or get directions to the pickup location directly from the popup</li>
+            </ol>
+            <p>In a real implementation, you would upload food images to <code>/icons/food/</code> directory matching the food types in your system.</p>
+        </div>
+    </div>
+
+    <script>
+        // Sample food donations data
+        const sampleDonations = [
+            {
+                id: 'D001',
+                item: 'Fresh Vegetables',
+                foodType: 'vegetables',
+                quantity: '5kg',
+                donor: 'Green Farms',
+                location: 'Downtown',
+                status: 'Available',
+                timestamp: new Date(),
+                expirationTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                description: 'Assorted fresh vegetables including carrots, tomatoes, and leafy greens.',
+                servings: 15,
+                position: { lat: 51.505, lng: -0.09 }
+            },
+            {
+                id: 'D002',
+                item: 'Bread',
+                foodType: 'bread',
+                quantity: '10 loaves',
+                donor: 'West Side Bakery',
+                location: 'West End',
+                status: 'Available',
+                timestamp: new Date(),
+                expirationTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                description: 'Freshly baked bread, still warm from the oven.',
+                servings: 20,
+                position: { lat: 51.508, lng: -0.11 }
+            },
+            {
+                id: 'D003',
+                item: 'Pasta Meal',
+                foodType: 'pasta',
+                quantity: '15 servings',
+                donor: 'Italian Restaurant',
+                location: 'East Side',
+                status: 'Available',
+                timestamp: new Date(),
+                expirationTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                description: 'Ready-to-eat pasta with tomato sauce and vegetables.',
+                servings: 15,
+                position: { lat: 51.51, lng: -0.07 }
+            },
+            {
+                id: 'D004',
+                item: 'Fresh Fruit',
+                foodType: 'fruits',
+                quantity: '8kg',
+                donor: 'Orchard Farms',
+                location: 'South Market',
+                status: 'Available',
+                timestamp: new Date(),
+                expirationTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+                description: 'Seasonal fruits including apples, oranges, and bananas.',
+                servings: 32,
+                position: { lat: 51.499, lng: -0.08 }
+            }
+        ];
+        
+        // URLs for realistic food images
+        const foodImages = {
+            'vegetables': 'https://cdn.pixabay.com/photo/2017/10/09/19/29/eat-2834549_960_720.jpg',
+            'fruits': 'https://cdn.pixabay.com/photo/2017/05/11/19/44/fresh-fruits-2305192_960_720.jpg',
+            'bread': 'https://cdn.pixabay.com/photo/2016/03/26/18/23/bread-1281053_960_720.jpg',
+            'rice': 'https://cdn.pixabay.com/photo/2014/10/22/18/43/rice-498688_960_720.jpg',
+            'pasta': 'https://cdn.pixabay.com/photo/2018/07/18/19/12/pasta-3547078_960_720.jpg',
+            'meat': 'https://cdn.pixabay.com/photo/2019/10/05/13/59/meat-4528469_960_720.jpg',
+            'dairy': 'https://cdn.pixabay.com/photo/2017/07/26/05/49/cheese-2540298_960_720.jpg',
+            'canned': 'https://cdn.pixabay.com/photo/2021/11/05/00/20/canned-food-6769837_960_720.jpg',
+            'mixed': 'https://cdn.pixabay.com/photo/2019/03/15/11/14/food-4056802_960_720.jpg'
+        };
+        
+        // Initialize map
+        const map = L.map('map').setView([51.505, -0.09], 13);
+        
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Store markers
+        const markers = [];
+        
+        // Add food donation marker
+        function addFoodMarker(donation) {
+            if (!donation) return null;
+            
+            // Get appropriate food icon
+            const iconUrl = foodImages[donation.foodType] || foodImages['mixed'];
+            
+            // Create custom icon with circular frame for food
+            const icon = L.divIcon({
+                className: 'food-marker-custom',
+                html: `<div style="
+                    background-image: url('${iconUrl}');
+                    background-size: cover;
+                    background-position: center;
+                    width: A50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+                "></div>`,
+                iconSize: [56, 56],
+                iconAnchor: [28, 28],
+                popupAnchor: [0, -15]
+            });
+            
+            // Create marker
+            const marker = L.marker([donation.position.lat, donation.position.lng], {
+                icon: icon,
+                title: donation.item
+            }).addTo(map);
+            
+            // Create popup content
+            const popupContent = createDonationPopupContent(donation);
+            
+            // Bind popup to marker
+            marker.bindPopup(popupContent, {
+                maxWidth: 300,
+                className: 'donation-popup'
+            });
+            
+            // Add to markers array
+            markers.push(marker);
+            
+            return marker;
+        }
+        
+        // Create donation popup content
+        function createDonationPopupContent(donation) {
+            // Format expiration time
+            const expirationTime = donation.expirationTime 
+                ? donation.expirationTime.toLocaleString() 
+                : 'Not specified';
+            
+            // Create HTML content
+            return `
+                <div class="donation-popup-content">
+                    <h3>${donation.item}</h3>
+                    <p class="donor"><strong>Donor:</strong> ${donation.donor}</p>
+                    <p class="quantity"><strong>Quantity:</strong> ${donation.quantity}</p>
+                    <p class="servings"><strong>Serves:</strong> Approximately ${donation.servings} people</p>
+                    <p class="freshness"><strong>Best before:</strong> ${expirationTime}</p>
+                    <p class="location"><strong>Location:</strong> ${donation.location}</p>
+                    ${donation.description ? `<p class="description">${donation.description}</p>` : ''}
+                    <div class="actions">
+                        <button class="btn-primary" onclick="claimDonation('${donation.id}')">Claim</button>
+                        <button class="btn-secondary" onclick="getDirections(${donation.position.lat}, ${donation.position.lng})">Directions</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Claim donation
+        window.claimDonation = function(donationId) {
+            alert(`You've claimed donation ID: ${donationId}. In a real app, this would update the database and notify the donor.`);
+        };
+        
+        // Get directions
+        window.getDirections = function(lat, lng) {
+            window.open(`https://www.openstreetmap.org/directions?from=${map.getCenter().lat},${map.getCenter().lng}&to=${lat},${lng}`, '_blank');
+        };
+        
+        // Add all sample donations to the map
+        function addSampleDonations() {
+            sampleDonations.forEach(donation => {
+                addFoodMarker(donation);
+            });
+        }
+        
+        // Add a single random donation
+        function addRandomDonation() {
+            // Generate random position near the map center
+            const center = map.getCenter();
+            const lat = center.lat + (Math.random() - 0.5) * 0.02;
+            const lng = center.lng + (Math.random() - 0.5) * 0.04;
+            
+            // Get random food type
+            const foodTypes = Object.keys(foodImages);
+            const randomFoodType = foodTypes[Math.floor(Math.random() * foodTypes.length)];
+            
+            // Create donation object
+            const donation = {
+                id: 'D' + Math.floor(Math.random() * 1000),
+                item: randomFoodType.charAt(0).toUpperCase() + randomFoodType.slice(1),
+                foodType: randomFoodType,
+                quantity: Math.floor(Math.random() * 10 + 2) + 'kg',
+                donor: 'Random Donor #' + Math.floor(Math.random() * 100),
+                location: 'Generated Location',
+                status: 'Available',
+                timestamp: new Date(),
+                expirationTime: new Date(Date.now() + Math.floor(Math.random() * 5 + 1) * 24 * 60 * 60 * 1000),
+                description: 'This is a randomly generated food donation for testing.',
+                servings: Math.floor(Math.random() * 20 + 5),
+                position: { lat, lng }
+            };
+            
+            // Add marker to map
+            addFoodMarker(donation);
+        }
+        
+        // Clear all markers from the map
+        function clearAllMarkers() {
+            markers.forEach(marker => {
+                map.removeLayer(marker);
+            });
+            markers.length = 0;
+        }
+        
+        // Event listeners for control buttons
+        document.getElementById('reset-view').addEventListener('click', function() {
+            map.setView([51.505, -0.09], 13);
+        });
+        
+        document.getElementById('add-sample').addEventListener('click', function() {
+            addRandomDonation();
+        });
+        
+        document.getElementById('clear-all').addEventListener('click', function() {
+            clearAllMarkers();
+        });
+        
+        // Initialize map with sample donations
+        addSampleDonations();
+    </script>
+</body>
+</html> 
